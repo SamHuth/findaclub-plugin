@@ -146,6 +146,8 @@ function clubs_shortcode_function($attributes)
 				} ?>
 			</div>
 		</div>
+	<?php else : ?>
+		<p>Empty</p>
 	<?php endif;
 
 	wp_reset_postdata();
