@@ -2,7 +2,7 @@
  * Plugin Name:       Core Site Plugin | findaclub.com.au
  * Plugin URI:        https://findaclub.com.au
  * Description:       Custom Taxonomy, Post Types, Functions, etc.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Requires at least: 6.9.0
  * Requires PHP:      8.2.3
  * Author:            Samuel Huth

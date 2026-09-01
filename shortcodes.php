@@ -28,7 +28,7 @@ function clubs_shortcode_function($attributes)
 			$taxonomy_args,
 			array(
 				'taxonomy' => 'sport',
-				'field' => 'name',
+				'field' => 'slug',
 				'terms' => $sport,
 			),
 		);
@@ -147,7 +147,7 @@ function clubs_shortcode_function($attributes)
 			</div>
 		</div>
 	<?php else : ?>
-		<p>Empty</p>
+		<p><!-- EMPTY --></p>
 	<?php endif;
 
 	wp_reset_postdata();
