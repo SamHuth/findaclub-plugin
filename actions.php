@@ -456,3 +456,9 @@ function fac_taxonomy_wysiwyg_save($term_id)
 		update_term_meta($term_id, 'fac_term_wysiwyg', $content);
 	}
 }
+
+add_action('template_redirect', function () {
+	if (is_feed()) {
+		wp_die('No Feeds Available', 'No Feeds', ['response' => 404]);
+	}
+});
