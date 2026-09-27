@@ -159,30 +159,38 @@ function new_sort_order($query)
 			);
 		}
 
-		// Check for play option filters
-		$play_options = [
-			'Mens',
-			'Mens_Community/Metro',
-			'Mens_Masters',
-			'Womens',
-			'Womens_Community/Metro',
-			'Womens_Masters',
-			'Juniors_Academy',
-			'Juniors_Community',
-			'Coach'
-		];
+		/*
+		 * Play option filters. The URL parameters are unchanged from v2 (?Mens=1),
+		 * but the fields were renamed to lower_snake_case by the "Normalise club
+		 * field names" tool (tools.php). Each option matches its new name and
+		 * its old one, so the filter works whether or not a site has run the
+		 * tool yet. Drop the old names once every site has.
+		 */
+		$play_options = array(
+			'Mens'                   => array('play_mens', 'play_Mens'),
+			'Mens_Community/Metro'   => array('play_mens_community_metro', 'play_mens_communitymetro'),
+			'Mens_Masters'           => array('play_mens_masters', 'play_Mens_Masters'),
+			'Womens'                 => array('play_womens', 'play_Womens'),
+			'Womens_Community/Metro' => array('play_womens_community_metro', 'play_womens_communitymetro', 'play_Womens_Community/Metro'),
+			'Womens_Masters'         => array('play_womens_masters'),
+			'Juniors_Academy'        => array('play_juniors_academy', 'play_Juniors_Academy'),
+			'Juniors_Community'      => array('play_juniors_community'),
+			'Coach'                  => array('play_coach', 'play_Coach'),
+		);
 
-		foreach ($play_options as $option) {
+		foreach ($play_options as $option => $keys) {
 			if (isset($_GET[$option]) && $_GET[$option] === '1') {
+				$spellings = array('relation' => 'OR');
 
-				array_push(
-					$meta_query_play_filters,
-					array(
-						'key' => 'play_' . $option,
-						'value' => '1',
-						'compare' => '='
-					),
-				);
+				foreach ($keys as $key) {
+					$spellings[] = array(
+						'key'     => $key,
+						'value'   => '1',
+						'compare' => '=',
+					);
+				}
+
+				$meta_query_play_filters[] = $spellings;
 			}
 		}
 
