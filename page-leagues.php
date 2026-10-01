@@ -4,9 +4,10 @@
  * Leagues picker for the "Sports in Region" page template.
  *
  * Adds a meta box to pages using page-templates/sports-in-region.php where an
- * editor chooses which leagues that page lists. The choice is stored as an
- * array of league term IDs in the _fac_page_leagues post meta, which the theme
- * reads (see inc/clubs.php in findaclub-v4).
+ * editor sets the heading over the league list and chooses which leagues that
+ * page lists. The heading is stored in _fac_page_leagues_heading and the
+ * choice as an array of league term IDs in _fac_page_leagues; the theme reads
+ * both (see inc/clubs.php in findaclub-v4).
  *
  * The box only appears for that template, so an ordinary page is not cluttered
  * with it. Switching a page to the template and saving reveals it.
@@ -15,6 +16,7 @@
 defined('ABSPATH') || exit;
 
 const FAC_PAGE_LEAGUES_META = '_fac_page_leagues';
+const FAC_PAGE_LEAGUES_HEADING_META = '_fac_page_leagues_heading';
 const FAC_PAGE_LEAGUES_TEMPLATE = 'page-templates/sports-in-region.php';
 
 function fac_page_leagues_register_meta()
@@ -33,6 +35,20 @@ function fac_page_leagues_register_meta()
 	));
 }
 add_action('init', 'fac_page_leagues_register_meta');
+
+function fac_page_leagues_register_heading_meta()
+{
+	register_post_meta('page', FAC_PAGE_LEAGUES_HEADING_META, array(
+		'type'              => 'string',
+		'single'            => true,
+		'show_in_rest'      => true,
+		'sanitize_callback' => 'sanitize_text_field',
+		'auth_callback'     => function () {
+			return current_user_can('edit_pages');
+		},
+	));
+}
+add_action('init', 'fac_page_leagues_register_heading_meta');
 
 function fac_page_leagues_add_meta_box($post_type, $post)
 {
@@ -57,6 +73,26 @@ add_action('add_meta_boxes', 'fac_page_leagues_add_meta_box', 10, 2);
 
 function fac_page_leagues_render_meta_box($post)
 {
+	wp_nonce_field('fac_page_leagues_save', 'fac_page_leagues_nonce');
+
+	// The heading over the league list on the page; the theme falls back to
+	// "Local leagues in the area" when this is left empty.
+	$heading = (string) get_post_meta($post->ID, FAC_PAGE_LEAGUES_HEADING_META, true);
+
+?>
+	<p>
+		<label for="fac-page-leagues-heading"><strong><?php esc_html_e('Section heading', 'findaclub'); ?></strong></label>
+		<input
+			type="text"
+			class="widefat"
+			id="fac-page-leagues-heading"
+			name="<?php echo esc_attr(FAC_PAGE_LEAGUES_HEADING_META); ?>"
+			value="<?php echo esc_attr($heading); ?>"
+			placeholder="<?php esc_attr_e('Local leagues in the area', 'findaclub'); ?>" />
+		<span class="description"><?php esc_html_e('Shown above the leagues. Leave empty to use "Local leagues in the area".', 'findaclub'); ?></span>
+	</p>
+<?php
+
 	$terms = get_terms(array(
 		'taxonomy'   => 'league',
 		'hide_empty' => false,
@@ -70,8 +106,6 @@ function fac_page_leagues_render_meta_box($post)
 	}
 
 	$selected = fac_get_page_leagues_ids($post->ID);
-
-	wp_nonce_field('fac_page_leagues_save', 'fac_page_leagues_nonce');
 
 	// Chosen leagues first, so a long list opens on what is already set.
 	usort($terms, function ($a, $b) use ($selected) {
@@ -139,6 +173,15 @@ function fac_page_leagues_save($post_id, $post)
 
 	if (!current_user_can('edit_post', $post_id)) {
 		return;
+	}
+
+	// Heading first: the league list below returns early when nothing is ticked.
+	$heading = isset($_POST[FAC_PAGE_LEAGUES_HEADING_META]) ? sanitize_text_field(wp_unslash($_POST[FAC_PAGE_LEAGUES_HEADING_META])) : '';
+
+	if ('' === $heading) {
+		delete_post_meta($post_id, FAC_PAGE_LEAGUES_HEADING_META);
+	} else {
+		update_post_meta($post_id, FAC_PAGE_LEAGUES_HEADING_META, $heading);
 	}
 
 	$submitted = isset($_POST[FAC_PAGE_LEAGUES_META]) ? (array) $_POST[FAC_PAGE_LEAGUES_META] : array();

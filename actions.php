@@ -212,6 +212,19 @@ function new_sort_order($query)
 		));
 
 
+		/*
+		 * Text search within an archive: ?q=, not WordPress's ?s=. Setting the
+		 * search here, after the query is parsed, narrows the results while the
+		 * page stays an archive — ?s= in the URL would make it a search page.
+		 */
+		if (!empty($_GET['q'])) {
+			$query->set('s', sanitize_text_field(wp_unslash($_GET['q'])));
+
+			// Names only: the box asks for a club name, and matching club
+			// write-ups returned clubs that only mention the word.
+			$query->set('search_columns', array('post_title'));
+		}
+
 		// Set posts per page
 		$query->set('posts_per_page', 27);
 	}
